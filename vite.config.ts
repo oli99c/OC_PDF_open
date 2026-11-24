@@ -429,7 +429,12 @@ function languageRedirectPlugin(): Plugin {
               'data-language-redirect': '',
               'data-base': base,
               'data-languages': SUPPORTED_LANGUAGES.filter(
-                (lang) => lang !== 'en'
+                (lang) =>
+                  lang !== 'en' &&
+                  (!process.env.VITE_ENABLED_LANGUAGES ||
+                    process.env.VITE_ENABLED_LANGUAGES.split(',')
+                      .map((l) => l.trim())
+                      .includes(lang))
               ).join(','),
               'data-default-language':
                 process.env.VITE_DEFAULT_LANGUAGE || 'en',

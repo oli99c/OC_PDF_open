@@ -2,7 +2,7 @@
 import { createIcons, icons } from 'lucide';
 import { showAlert, showLoader, hideLoader } from '../ui.js';
 import { formatBytes, downloadFile } from '../utils/helpers.js';
-import { makeUniqueFileKey } from '../utils/deduplicate-filename.js';
+import { tabName } from '../utils/deduplicate-filename.js';
 import { batchDecryptIfNeeded } from '../utils/password-prompt.js';
 import { getEditorDisabledCategories } from '../utils/disabled-tools.js';
 import { editorFontFallback } from '../config/editor-fonts.js';
@@ -26,8 +26,19 @@ import type {
 } from '@/types';
 
 import { trText, onPageReady } from '../i18n/i18n.js';
+import { consumeLaunchedFiles, isPdfFile } from '../utils/launch-queue.js';
+import i18next from 'i18next';
 
 const FREETEXT_SUBTYPE = 3;
+
+// l'éditeur embarque ses propres traductions (dont le français)
+// mais démarrait toujours en anglais ; on suit la langue de l'application.
+const EDITOR_LOCALES = ['en', 'de', 'nl', 'fr', 'es', 'sv', 'ja'];
+export function editorLocale(language: string | undefined): string {
+  const lang = (language || 'en').split('-')[0];
+  if (lang === 'zh') return 'zh-CN';
+  return EDITOR_LOCALES.includes(lang) ? lang : 'en';
+}
 
 export function trackAppliedRedactions(
   redaction: RedactionPluginLite
@@ -108,7 +119,7 @@ export async function scrubRedactedText(
 ): Promise<Uint8Array> {
   const { redactDocumentData } =
     await import('../utils/redact-document-data.js');
-  return redactDocumentData(bytes, terms);
+  return redactDocumentData(bytes, terms, { stripMetadata: true });
 }
 
 function confirmChoice(
@@ -216,6 +227,14 @@ let isViewerInitialized = false;
 let currentFileName = 'document.pdf';
 const fileEntryMap = new Map<string, HTMLElement>();
 
+// un PDF ouvert occupe toute la fenêtre (titre, zone de dépôt,
+// liste des fichiers, barre et pied masqués ; voir styles.css).
+const WORKSPACE_CLASS = 'ap-espace';
+function enterWorkspace() {
+  document.body.classList.add(WORKSPACE_CLASS);
+  window.scrollTo(0, 0);
+}
+
 function resetViewer() {
   const pdfWrapper = document.getElementById('embed-pdf-wrapper');
   const pdfContainer = document.getElementById('embed-pdf-container');
@@ -224,6 +243,7 @@ function resetViewer() {
   const fileInput = document.getElementById('file-input') as HTMLInputElement;
   if (pdfContainer) pdfContainer.textContent = '';
   if (pdfWrapper) pdfWrapper.classList.add('hidden');
+  document.body.classList.remove(WORKSPACE_CLASS);
   if (downloadBtn) downloadBtn.classList.add('hidden');
   if (fileDisplayArea) fileDisplayArea.innerHTML = '';
   if (fileInput) fileInput.value = '';
@@ -283,6 +303,9 @@ function initializePage() {
   document.getElementById('back-to-tools')?.addEventListener('click', () => {
     window.location.href = import.meta.env.BASE_URL;
   });
+
+  // PDF ouvert depuis Windows (application installee par defaut)
+  consumeLaunchedFiles((files) => handleFiles(files));
 }
 
 async function handleFileUpload(e: Event) {
@@ -292,10 +315,8 @@ async function handleFileUpload(e: Event) {
   }
 }
 
-async function handleFiles(files: FileList) {
-  const pdfFiles = Array.from(files).filter(
-    (f) => f.type === 'application/pdf'
-  );
+async function handleFiles(files: FileList | File[]) {
+  const pdfFiles = Array.from(files).filter(isPdfFile);
   if (pdfFiles.length === 0) {
     showAlert('Invalid File', 'Please upload a valid PDF file.');
     return;
@@ -326,6 +347,7 @@ async function handleFiles(files: FileList) {
 
       pdfContainer.textContent = '';
       pdfWrapper.classList.remove('hidden');
+      enterWorkspace();
 
       const { default: EmbedPDF } = await import('bentopdf-viewer');
       viewerInstance = EmbedPDF.init({
@@ -343,6 +365,7 @@ async function handleFiles(files: FileList) {
           maxDocuments: 10,
         },
         tabBar: 'always',
+        i18n: { defaultLocale: editorLocale(i18next.language) },
       });
 
       const registry = await viewerInstance.registry;
@@ -397,7 +420,7 @@ async function handleFiles(files: FileList) {
 
       docManagerPlugin.openDocumentBuffer({
         buffer: firstBuffer,
-        name: makeUniqueFileKey(0, firstFile.name),
+        name: tabName(0, decryptedFiles),
         autoActivate: true,
       });
 
@@ -405,7 +428,7 @@ async function handleFiles(files: FileList) {
         const buffer = await decryptedFiles[i].arrayBuffer();
         docManagerPlugin.openDocumentBuffer({
           buffer,
-          name: makeUniqueFileKey(i, decryptedFiles[i].name),
+          name: tabName(i, decryptedFiles),
           autoActivate: false,
         });
       }
@@ -573,7 +596,7 @@ async function handleFiles(files: FileList) {
         const buffer = await decryptedFiles[i].arrayBuffer();
         docManagerPlugin.openDocumentBuffer({
           buffer,
-          name: makeUniqueFileKey(i, decryptedFiles[i].name),
+          name: tabName(i, decryptedFiles),
           autoActivate: true,
         });
       }
@@ -592,7 +615,7 @@ function addFileEntries(fileDisplayArea: HTMLElement, files: File[]) {
     const fileDiv = document.createElement('div');
     fileDiv.className =
       'flex items-center justify-between bg-gray-700 p-3 rounded-lg';
-    fileDiv.setAttribute('data-pending-name', makeUniqueFileKey(i, file.name));
+    fileDiv.setAttribute('data-pending-name', tabName(i, files));
 
     const infoContainer = document.createElement('div');
     infoContainer.className = 'flex flex-col flex-1 min-w-0';

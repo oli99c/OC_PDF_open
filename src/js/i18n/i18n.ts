@@ -6,7 +6,7 @@ import enCommon from '../../../public/locales/en/common.json';
 import enTools from '../../../public/locales/en/tools.json';
 
 // Supported languages
-export const supportedLanguages = [
+const allLanguages = [
   'en',
   'ar',
   'be',
@@ -32,7 +32,23 @@ export const supportedLanguages = [
   'ca',
   'fa',
 ] as const;
-export type SupportedLanguage = (typeof supportedLanguages)[number];
+export type SupportedLanguage = (typeof allLanguages)[number];
+
+// VITE_ENABLED_LANGUAGES (ex. "fr,en") limite les langues proposées.
+// L'anglais reste toujours actif (langue de repli). Vide = toutes les langues.
+const enabledLanguagesEnv: string =
+  import.meta.env.VITE_ENABLED_LANGUAGES || '';
+export const supportedLanguages: readonly SupportedLanguage[] =
+  enabledLanguagesEnv.trim()
+    ? allLanguages.filter(
+        (lang) =>
+          lang === 'en' ||
+          enabledLanguagesEnv
+            .split(',')
+            .map((l) => l.trim())
+            .includes(lang)
+      )
+    : allLanguages;
 
 export const languageNames: Record<SupportedLanguage, string> = {
   en: 'English',

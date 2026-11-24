@@ -238,9 +238,26 @@ function removeTextFromDocument(doc: PDFDocument, terms: string[]): void {
   }
 }
 
+// un document caviardé ne doit garder aucune propriété identifiante
+// (Auteur, Titre, Sujet, Mots-clés, logiciel d'origine, XMP).
+function stripDocumentMetadata(doc: PDFDocument): void {
+  const info = doc.context.trailerInfo.Info;
+  const infoDict = info instanceof PDFRef ? doc.context.lookup(info) : info;
+  if (infoDict instanceof PDFDict) {
+    for (const key of infoDict.keys()) infoDict.delete(key);
+  }
+  doc.catalog.delete(PDFName.of('Metadata'));
+  for (const page of doc.getPages()) page.node.delete(PDFName.of('Metadata'));
+}
+
+export interface RedactDocumentDataOptions {
+  stripMetadata?: boolean;
+}
+
 export async function redactDocumentData(
   pdf: Uint8Array,
-  terms: readonly string[] = []
+  terms: readonly string[] = [],
+  options: RedactDocumentDataOptions = {}
 ): Promise<Uint8Array> {
   const doc = await loadPdfDocument(pdf);
   const searchTerms = terms.filter((term) => term.length > 0);
@@ -249,5 +266,6 @@ export async function redactDocumentData(
   } else {
     for (const page of doc.getPages()) page.node.delete(PDFName.of('Thumb'));
   }
+  if (options.stripMetadata) stripDocumentMetadata(doc);
   return removeUnreferencedObjects(await doc.save());
 }

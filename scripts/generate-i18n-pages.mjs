@@ -21,7 +21,19 @@ const SITE_URL = (process.env.SITE_URL || 'https://www.bentopdf.com').replace(
 );
 const BASE_PATH = (process.env.BASE_URL || '/').replace(/\/$/, '');
 
+// VITE_ENABLED_LANGUAGES (ex. "fr,en") limite les pages générées.
+const ENABLED_LANGUAGES = (process.env.VITE_ENABLED_LANGUAGES || '')
+  .split(',')
+  .map((l) => l.trim())
+  .filter(Boolean);
 const languages = fs.readdirSync(LOCALES_DIR).filter((file) => {
+  if (
+    ENABLED_LANGUAGES.length > 0 &&
+    file !== 'en' &&
+    !ENABLED_LANGUAGES.includes(file)
+  ) {
+    return false;
+  }
   return fs.statSync(path.join(LOCALES_DIR, file)).isDirectory();
 });
 

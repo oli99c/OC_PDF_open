@@ -80,6 +80,10 @@ export const downloadFile = (blob: Blob, filename: string): void => {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  // signale le fichier produit (carte « Continuer avec ce fichier »)
+  window.dispatchEvent(
+    new CustomEvent('pdftools:file-produced', { detail: { blob, filename } })
+  );
 };
 
 export const readFileAsArrayBuffer = (

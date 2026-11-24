@@ -6,7 +6,6 @@
     "display": "standalone",
     "background_color": "#222222",
     "theme_color": "#4f46e5",
-    "orientation": "portrait-primary",
     "icons": [
         {
             "src": "/images/favicon-192x192.png",
@@ -36,5 +35,21 @@
         "offline",
         "tools"
     ],
-    "screenshots": []
+    "screenshots": [],
+    "id": "/",
+    "scope": "/",
+    "file_handlers": [
+        {
+            "action": "/edit-pdf.html",
+            "accept": {
+                "application/pdf": [
+                    ".pdf"
+                ]
+            },
+            "launch_type": "multiple-clients"
+        }
+    ],
+    "launch_handler": {
+        "client_mode": "navigate-new"
+    }
 }

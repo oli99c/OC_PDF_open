@@ -1885,3 +1885,333 @@ details > summary .icon {
   gap: 0.25rem;
   padding: 0.25rem 0;
 }
+
+/* éditeur plein écran quand un PDF est ouvert (classe posée par
+   edit-pdf-page.ts). La visionneuse occupe toute la hauteur de la fenêtre,
+   « Retour aux outils » en haut, « Télécharger » en bas à droite. */
+body.ap-espace {
+  overflow: hidden;
+}
+body.ap-espace footer,
+body.ap-espace #back-to-tools,
+body.ap-espace #tool-uploader > h1,
+body.ap-espace #tool-uploader > p,
+body.ap-espace #drop-zone,
+body.ap-espace #file-display-area {
+  display: none !important;
+}
+body.ap-espace #uploader {
+  min-height: 0;
+  height: calc(100vh - 45px);
+  height: calc(100dvh - 45px);
+  padding: 8px;
+}
+/* en plein écran, l'en-tête se réduit à 44 px et porte la barre d'outils */
+body.ap-espace > nav .container > div {
+  height: 44px;
+}
+body.ap-espace > nav #nav-logo {
+  height: 24px;
+  width: 24px;
+}
+body.ap-espace > nav #nav-brand {
+  font-size: 1rem;
+}
+body.ap-espace #tool-uploader {
+  max-width: none;
+  height: 100%;
+  padding: 8px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+}
+body.ap-espace #back-to-tools {
+  margin-bottom: 8px;
+}
+body.ap-espace #embed-pdf-wrapper:not(.hidden) {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 0;
+  display: flex;
+  flex-direction: column;
+}
+body.ap-espace #embed-pdf-container {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+}
+body.ap-espace #download-edited-pdf {
+  width: auto;
+  align-self: flex-end;
+  margin-top: 8px;
+  padding: 8px 24px;
+}
+
+/* parcours des outils. Une fois un fichier déposé, la zone de dépôt
+   se réduit à une ligne (elle sert encore à ajouter ou remplacer), fil d'Ariane
+   et sous-titre s'effacent, et le bouton d'action reste visible en bas de
+   l'écran. Mesure avant correction (1366x768) : bouton hors écran dans 14 outils
+   sur 15. L'éditeur a son propre mode plein écran (ap-espace). */
+body:not(.ap-espace)
+  #uploader:has(#file-display-area > *, [id$='-options']:not(.hidden)) {
+  padding-top: 16px;
+}
+body:not(.ap-espace)
+  #tool-uploader:has(#file-display-area > *, [id$='-options']:not(.hidden))
+  :is([data-bentopdf-breadcrumb], h1 + p) {
+  display: none;
+}
+body:not(.ap-espace)
+  #tool-uploader:has(#file-display-area > *, [id$='-options']:not(.hidden))
+  #back-to-tools {
+  margin-bottom: 12px;
+}
+body:not(.ap-espace)
+  #tool-uploader:has(#file-display-area > *, [id$='-options']:not(.hidden))
+  #drop-zone {
+  height: 56px !important;
+}
+body:not(.ap-espace)
+  #tool-uploader:has(#file-display-area > *, [id$='-options']:not(.hidden))
+  #drop-zone
+  > div {
+  padding: 0;
+}
+body:not(.ap-espace)
+  #tool-uploader:has(#file-display-area > *, [id$='-options']:not(.hidden))
+  #drop-zone
+  :is(i, svg, p.text-xs) {
+  display: none;
+}
+body:not(.ap-espace)
+  #tool-uploader:has(#file-display-area > *, [id$='-options']:not(.hidden))
+  #drop-zone
+  p {
+  margin: 0;
+}
+body:not(.ap-espace) #tool-uploader #process-btn:not(.hidden) {
+  position: sticky;
+  bottom: 12px;
+  z-index: 20;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* barre d'outils rapide (quick-tools-bar.ts) */
+.ap-barre {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  min-width: 0;
+}
+.ap-raccourcis {
+  display: flex;
+  gap: 6px;
+  overflow: hidden;
+  min-width: 0;
+}
+.ap-puce {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid #4b5563;
+  color: #e5e7eb;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+.ap-puce:hover,
+.ap-puce:focus-visible {
+  background: rgba(79, 70, 229, 0.35);
+  border-color: #6366f1;
+}
+.ap-puce .ph-star {
+  color: #fbbf24;
+}
+.ap-puce-active {
+  border-color: #4f46e5;
+  background: rgba(79, 70, 229, 0.25);
+}
+.ap-tous {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #4f46e5;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ap-tous:hover,
+.ap-tous:focus-visible {
+  background: #6366f1;
+}
+.ap-panneau {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 320px;
+  max-height: min(70vh, 560px);
+  display: flex;
+  flex-direction: column;
+  background: #2a2a2a;
+  border: 1px solid #4b5563;
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  padding: 12px;
+  z-index: 60;
+}
+.ap-panneau[hidden] {
+  display: none;
+}
+.ap-panneau-titre {
+  color: #d1d5db;
+  font-size: 0.8125rem;
+  margin-bottom: 8px;
+}
+.ap-recherche {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #1f1f1f;
+  border: 1px solid #4b5563;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.ap-liste {
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ap-ligne {
+  display: flex;
+  align-items: center;
+}
+.ap-lien {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  color: #e5e7eb;
+  font-size: 0.875rem;
+}
+.ap-lien:hover,
+.ap-lien:focus-visible {
+  background: rgba(79, 70, 229, 0.35);
+}
+.ap-lien-actif {
+  color: #a5b4fc;
+  font-weight: 600;
+}
+.ap-etoile {
+  padding: 8px;
+  border-radius: 8px;
+  color: #6b7280;
+}
+.ap-etoile:hover,
+.ap-etoile:focus-visible,
+.ap-etoile-on {
+  color: #fbbf24;
+}
+.ap-vide {
+  color: #9ca3af;
+  padding: 8px;
+  font-size: 0.875rem;
+}
+.ap-carte {
+  position: fixed;
+  top: 76px;
+  right: 16px;
+  width: 340px;
+  background: #2a2a2a;
+  border: 1px solid #4b5563;
+  border-left: 4px solid #4f46e5;
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  padding: 14px 16px;
+  z-index: 55;
+  color: #e5e7eb;
+}
+.ap-carte-courte {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  max-width: 340px;
+  font-size: 0.875rem;
+}
+.ap-carte-tete {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ap-carte-tete .ph-check-circle {
+  color: #34d399;
+  font-size: 1.25rem;
+}
+.ap-carte-fermer {
+  margin-left: auto;
+  color: #9ca3af;
+  padding: 2px;
+}
+.ap-carte-fermer:hover {
+  color: #fff;
+}
+.ap-carte-fichier {
+  color: #9ca3af;
+  font-size: 0.8125rem;
+  margin: 2px 0 10px 28px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ap-carte-invite {
+  font-size: 0.875rem;
+  margin-bottom: 8px;
+}
+.ap-carte-boutons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.ap-carte-bouton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #4b5563;
+  font-size: 0.8125rem;
+  text-align: left;
+}
+.ap-carte-bouton:hover,
+.ap-carte-bouton:focus-visible {
+  background: rgba(79, 70, 229, 0.35);
+  border-color: #6366f1;
+}
+.ap-carte-autre {
+  margin-top: 8px;
+  font-size: 0.8125rem;
+  color: #a5b4fc;
+}
+.ap-carte-autre:hover {
+  text-decoration: underline;
+}
+body.ap-espace .ap-carte {
+  top: 56px;
+}
+@media (max-width: 900px) {
+  .ap-raccourcis {
+    display: none;
+  }
+}

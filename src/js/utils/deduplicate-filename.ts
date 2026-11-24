@@ -26,3 +26,14 @@ export function deduplicateFileName(
 export function makeUniqueFileKey(index: number, name: string): string {
   return `${index}_${name}`;
 }
+
+// nom d'onglet lisible dans l'éditeur ; préfixe d'index seulement
+// en cas de doublon dans le lot (il sert aussi de clé onglet <-> liste).
+export function tabName(
+  index: number,
+  files: readonly { name: string }[]
+): string {
+  const name = files[index].name;
+  const twins = files.filter((f) => f.name === name).length;
+  return twins > 1 ? makeUniqueFileKey(index, name) : name;
+}

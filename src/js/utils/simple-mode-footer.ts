@@ -1,5 +1,6 @@
 import { createLanguageSwitcher } from '../i18n/language-switcher.js';
 import { onPageReady } from '../i18n/i18n.js';
+import './quick-tools-bar.js';
 
 // Handle simple mode adjustments for tool pages
 if (__SIMPLE_MODE__) {

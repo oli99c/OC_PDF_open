@@ -263,4 +263,18 @@ describe('redactDocumentData', () => {
     expect(result.getPages()[0].node.get(PDFName.of('Thumb'))).toBeUndefined();
     expect(result.getTitle()).toBe(`Report for ${SECRET}`);
   });
+
+  it('strips every document property and XMP when stripMetadata is set', async () => {
+    const input = await buildDocument();
+    const output = await redactDocumentData(input, [], { stripMetadata: true });
+    const result = await PDFDocument.load(output, { updateMetadata: false });
+    expect(result.getTitle()).toBeUndefined();
+    expect(result.getAuthor()).toBeUndefined();
+    expect(result.getProducer()).toBeUndefined();
+    expect(result.getCreator()).toBeUndefined();
+    expect(result.catalog.get(PDFName.of('Metadata'))).toBeUndefined();
+    const raw = new TextDecoder('latin1').decode(output);
+    expect(raw).not.toContain('Keep Author');
+    expect(raw).not.toContain(SECRET);
+  });
 });
